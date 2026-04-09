@@ -569,7 +569,7 @@ impl MemPalace {
             Err(e) => return serde_json::json!({ "error": e.to_string() }).to_string(),
         };
         let now = chrono::Utc::now();
-        let id = format!("diary_{}_{}",p.agent_name, now.timestamp_millis());
+        let id = format!("diary_{}_{}", p.agent_name, now.timestamp_millis());
         let drawer = Drawer {
             id: id.clone(),
             content: p.entry.clone(),
