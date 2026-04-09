@@ -106,3 +106,5 @@ Options:
 - `--output` writes per-question retrieval results as JSONL while the summary is printed to stdout
 
 The benchmark uses steel-memory's embedding and SQLite-backed search stack, and reports LongMemEval-style retrieval metrics such as `recall_any@k`, `recall_all@k`, and `ndcg_any@k`. On first use, the embedding model may still need to be downloaded.
+
+The benchmark uses the same FastEmbed `AllMiniLML6V2` model as the MCP server. The first run may download roughly 90MB of model data before benchmarking starts.

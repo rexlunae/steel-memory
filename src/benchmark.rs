@@ -342,7 +342,7 @@ fn build_corpus_items(
 ) -> Vec<CorpusItem> {
     let mut items = Vec::new();
     let mut chunk_index = 0_i64;
-    for (session_id, session, timestamp) in itertools_zip(
+    for (session_id, session, timestamp) in zip_three(
         &entry.haystack_session_ids,
         &entry.haystack_sessions,
         &entry.haystack_dates,
@@ -608,7 +608,7 @@ fn write_results_jsonl(path: &Path, results: &[LongMemEvalBenchmarkResult]) -> a
     Ok(())
 }
 
-fn itertools_zip<'a, A, B, C>(
+fn zip_three<'a, A, B, C>(
     first: &'a [A],
     second: &'a [B],
     third: &'a [C],
