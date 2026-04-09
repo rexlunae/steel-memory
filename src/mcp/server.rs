@@ -138,7 +138,7 @@ pub struct MemPalace {
 #[tool_router]
 impl MemPalace {
     pub async fn new() -> anyhow::Result<Self> {
-        let config = crate::config::Config::default()?;
+        let config = crate::config::Config::load()?;
 
         VectorStorage::new(&config.vector_db)?;
         KnowledgeGraph::new(&config.kg_db)?;

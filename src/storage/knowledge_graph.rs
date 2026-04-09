@@ -159,6 +159,7 @@ impl KnowledgeGraph {
         }))
     }
 
+    #[allow(dead_code)]
     pub fn list_entities(&self, limit: usize) -> anyhow::Result<Vec<Entity>> {
         let conn = open_conn(&self.db_path)?;
         let mut stmt = conn.prepare(

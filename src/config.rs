@@ -10,7 +10,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn default() -> anyhow::Result<Self> {
+    pub fn load() -> anyhow::Result<Self> {
         let home = dirs_or_manual_home();
         let palace = home.join(".steel-memory");
         std::fs::create_dir_all(&palace)?;

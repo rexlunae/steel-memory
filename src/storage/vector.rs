@@ -80,11 +80,11 @@ impl VectorStorage {
         let mut results: Vec<SearchResult> = Vec::new();
         for row in rows {
             let (drawer, vec_json) = row?;
-            if let Some(w) = wing {
-                if drawer.wing != w { continue; }
+            if wing.is_some_and(|w| drawer.wing != w) {
+                continue;
             }
-            if let Some(r) = room {
-                if drawer.room != r { continue; }
+            if room.is_some_and(|r| drawer.room != r) {
+                continue;
             }
             let stored_vec: Vec<f32> = serde_json::from_str(&vec_json).unwrap_or_default();
             let sim = cosine_similarity(query_vec, &stored_vec);
@@ -127,7 +127,7 @@ impl VectorStorage {
                 param_room.as_deref().unwrap_or(""),
                 &limit.to_string(),
             ]),
-            |row| row_to_drawer(row),
+            row_to_drawer,
         )?.filter_map(|r| r.ok()).collect();
         Ok(drawers)
     }
