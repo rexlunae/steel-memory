@@ -3,6 +3,7 @@ pub mod types;
 pub mod error;
 pub mod storage;
 pub mod core;
+pub mod benchmark;
 
 pub use storage::vector::cosine_similarity;
 pub use storage::knowledge_graph::normalize_id;

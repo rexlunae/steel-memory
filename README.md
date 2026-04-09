@@ -84,3 +84,25 @@ On first run with semantic search enabled, the AllMiniLML6V2 model (~90MB) will 
 ```bash
 cargo test
 ```
+
+## LongMemEval Benchmarking
+
+You can benchmark steel-memory retrieval against [LongMemEval](https://github.com/xiaowu0162/LongMemEval) with the included CLI.
+
+1. Download one of the LongMemEval JSON files, such as `longmemeval_oracle.json`, `longmemeval_s_cleaned.json`, or `longmemeval_m_cleaned.json`.
+2. Run the benchmark:
+
+```bash
+cargo run --bin longmemeval-benchmark -- \
+  --data /absolute/path/to/longmemeval_oracle.json \
+  --granularity session \
+  --output /absolute/path/to/longmemeval-results.jsonl
+```
+
+Options:
+
+- `--granularity session|turn` controls whether the benchmark indexes whole sessions or user turns
+- `--max-questions N` limits the number of evaluation instances for a smaller test run
+- `--output` writes per-question retrieval results as JSONL while the summary is printed to stdout
+
+The benchmark uses steel-memory's embedding and SQLite-backed search stack, and reports LongMemEval-style retrieval metrics such as `recall_any@k`, `recall_all@k`, and `ndcg_any@k`. On first use, the embedding model may still need to be downloaded.
