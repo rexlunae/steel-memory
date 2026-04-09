@@ -102,33 +102,33 @@ impl VectorStorage {
         limit: usize,
     ) -> anyhow::Result<Vec<Drawer>> {
         let conn = open_conn(&self.db_path)?;
-        let (sql, param_wing, param_room) = match (wing, room) {
-            (Some(w), Some(r)) => (
-                "SELECT id,content,wing,room,source_file,source_mtime,chunk_index,added_by,filed_at,hall,topic,drawer_type,agent,date,importance,vector FROM drawers WHERE wing=?1 AND room=?2 ORDER BY importance DESC LIMIT ?3",
-                Some(w.to_string()), Some(r.to_string())
-            ),
-            (Some(w), None) => (
-                "SELECT id,content,wing,room,source_file,source_mtime,chunk_index,added_by,filed_at,hall,topic,drawer_type,agent,date,importance,vector FROM drawers WHERE wing=?1 ORDER BY importance DESC LIMIT ?3",
-                Some(w.to_string()), None
-            ),
-            (None, Some(r)) => (
-                "SELECT id,content,wing,room,source_file,source_mtime,chunk_index,added_by,filed_at,hall,topic,drawer_type,agent,date,importance,vector FROM drawers WHERE room=?2 ORDER BY importance DESC LIMIT ?3",
-                None, Some(r.to_string())
-            ),
-            (None, None) => (
-                "SELECT id,content,wing,room,source_file,source_mtime,chunk_index,added_by,filed_at,hall,topic,drawer_type,agent,date,importance,vector FROM drawers ORDER BY importance DESC LIMIT ?3",
-                None, None
-            ),
+        let base = "SELECT id,content,wing,room,source_file,source_mtime,chunk_index,added_by,\
+                    filed_at,hall,topic,drawer_type,agent,date,importance,vector FROM drawers";
+        let mut conditions: Vec<String> = Vec::new();
+        let mut param_values: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+
+        if let Some(w) = wing {
+            conditions.push(format!("wing=?{}", param_values.len() + 1));
+            param_values.push(Box::new(w.to_string()));
+        }
+        if let Some(r) = room {
+            conditions.push(format!("room=?{}", param_values.len() + 1));
+            param_values.push(Box::new(r.to_string()));
+        }
+        let limit_idx = param_values.len() + 1;
+        param_values.push(Box::new(limit as i64));
+
+        let sql = if conditions.is_empty() {
+            format!("{} ORDER BY importance DESC LIMIT ?{}", base, limit_idx)
+        } else {
+            format!("{} WHERE {} ORDER BY importance DESC LIMIT ?{}", base, conditions.join(" AND "), limit_idx)
         };
-        let mut stmt = conn.prepare(sql)?;
-        let drawers = stmt.query_map(
-            rusqlite::params_from_iter([
-                param_wing.as_deref().unwrap_or(""),
-                param_room.as_deref().unwrap_or(""),
-                &limit.to_string(),
-            ]),
-            row_to_drawer,
-        )?.filter_map(|r| r.ok()).collect();
+
+        let mut stmt = conn.prepare(&sql)?;
+        let refs: Vec<&dyn rusqlite::ToSql> = param_values.iter().map(|p| p.as_ref()).collect();
+        let drawers = stmt.query_map(refs.as_slice(), row_to_drawer)?
+            .filter_map(|r| r.ok())
+            .collect();
         Ok(drawers)
     }
 

@@ -196,7 +196,7 @@ impl MemPalace {
 
     // ── tool 2: list_wings ───────────────────────────────────────────────────
 
-    #[tool(description = "List all wings (namespaces) with drawer counts")]
+    #[tool(name = "mempalace_list_wings", description = "List all wings (namespaces) with drawer counts")]
     async fn list_wings(&self) -> String {
         let db_path = self.db_path.clone();
         let result = tokio::task::spawn_blocking(move || -> anyhow::Result<_> {
@@ -218,7 +218,7 @@ impl MemPalace {
 
     // ── tool 3: list_rooms ───────────────────────────────────────────────────
 
-    #[tool(description = "List rooms, optionally filtered by wing")]
+    #[tool(name = "mempalace_list_rooms", description = "List rooms, optionally filtered by wing")]
     async fn list_rooms(&self, Parameters(p): Parameters<ListRoomsParams>) -> String {
         let db_path = self.db_path.clone();
         let wing = p.wing.clone();
@@ -241,7 +241,7 @@ impl MemPalace {
 
     // ── tool 4: get_taxonomy ─────────────────────────────────────────────────
 
-    #[tool(description = "Get full wing/room taxonomy with counts")]
+    #[tool(name = "mempalace_get_taxonomy", description = "Get full wing/room taxonomy with counts")]
     async fn get_taxonomy(&self) -> String {
         let db_path = self.db_path.clone();
         let result = tokio::task::spawn_blocking(move || -> anyhow::Result<_> {
@@ -257,7 +257,7 @@ impl MemPalace {
 
     // ── tool 5: search ───────────────────────────────────────────────────────
 
-    #[tool(description = "Semantic search over drawers using embedding similarity")]
+    #[tool(name = "mempalace_search", description = "Semantic search over drawers using embedding similarity")]
     async fn search(&self, Parameters(p): Parameters<SearchParams>) -> String {
         let vec = match self.embed(&p.query).await {
             Ok(v) => v,
@@ -281,7 +281,7 @@ impl MemPalace {
 
     // ── tool 6: check_duplicate ──────────────────────────────────────────────
 
-    #[tool(description = "Check if content is a near-duplicate of an existing drawer")]
+    #[tool(name = "mempalace_check_duplicate", description = "Check if content is a near-duplicate of an existing drawer")]
     async fn check_duplicate(&self, Parameters(p): Parameters<CheckDuplicateParams>) -> String {
         let vec = match self.embed(&p.content).await {
             Ok(v) => v,
@@ -314,7 +314,7 @@ impl MemPalace {
 
     // ── tool 7: wake_up ──────────────────────────────────────────────────────
 
-    #[tool(description = "Return identity layer and AAAK-compressed top memories for context priming")]
+    #[tool(name = "mempalace_wake_up", description = "Return identity layer and AAAK-compressed top memories for context priming")]
     async fn wake_up(&self, Parameters(p): Parameters<WakeUpParams>) -> String {
         let stack = MemoryStack::new(self.palace_path.clone(), self.db_path.clone());
         match stack.wake_up(p.wing.as_deref()).await {
@@ -325,7 +325,7 @@ impl MemPalace {
 
     // ── tool 8: recall ───────────────────────────────────────────────────────
 
-    #[tool(description = "List drawers by wing/room with optional limit")]
+    #[tool(name = "mempalace_recall", description = "List drawers by wing/room with optional limit")]
     async fn recall(&self, Parameters(p): Parameters<RecallParams>) -> String {
         let stack = MemoryStack::new(self.palace_path.clone(), self.db_path.clone());
         match stack
@@ -340,7 +340,7 @@ impl MemPalace {
 
     // ── tool 9: build_graph ──────────────────────────────────────────────────
 
-    #[tool(description = "Build the palace graph: rooms as nodes, shared wings as edges")]
+    #[tool(name = "mempalace_build_graph", description = "Build the palace graph: rooms as nodes, shared wings as edges")]
     async fn build_graph(&self) -> String {
         let pg = PalaceGraph { db_path: self.db_path.clone() };
         match pg.build_graph().await {
@@ -352,7 +352,7 @@ impl MemPalace {
 
     // ── tool 10: traverse_graph ──────────────────────────────────────────────
 
-    #[tool(description = "BFS traverse from a start room up to max_hops away")]
+    #[tool(name = "mempalace_traverse_graph", description = "BFS traverse from a start room up to max_hops away")]
     async fn traverse_graph(&self, Parameters(p): Parameters<TraverseGraphParams>) -> String {
         let pg = PalaceGraph { db_path: self.db_path.clone() };
         match pg
@@ -367,7 +367,7 @@ impl MemPalace {
 
     // ── tool 11: find_tunnels ────────────────────────────────────────────────
 
-    #[tool(description = "Find rooms shared across multiple wings (tunnels)")]
+    #[tool(name = "mempalace_find_tunnels", description = "Find rooms shared across multiple wings (tunnels)")]
     async fn find_tunnels(&self, Parameters(p): Parameters<FindTunnelsParams>) -> String {
         let pg = PalaceGraph { db_path: self.db_path.clone() };
         match pg
@@ -382,7 +382,7 @@ impl MemPalace {
 
     // ── tool 12: palace_graph_stats ──────────────────────────────────────────
 
-    #[tool(description = "Statistics about the palace graph topology")]
+    #[tool(name = "mempalace_graph_stats", description = "Statistics about the palace graph topology")]
     async fn palace_graph_stats(&self) -> String {
         let pg = PalaceGraph { db_path: self.db_path.clone() };
         match pg.stats().await {
@@ -393,7 +393,7 @@ impl MemPalace {
 
     // ── tool 13: add_drawer ──────────────────────────────────────────────────
 
-    #[tool(description = "Add a memory drawer to the palace")]
+    #[tool(name = "mempalace_add_drawer", description = "Add a memory drawer to the palace")]
     async fn add_drawer(&self, Parameters(p): Parameters<AddDrawerParams>) -> String {
         let vec = match self.embed(&p.content).await {
             Ok(v) => v,
@@ -439,7 +439,7 @@ impl MemPalace {
 
     // ── tool 14: delete_drawer ───────────────────────────────────────────────
 
-    #[tool(description = "Delete a drawer by ID")]
+    #[tool(name = "mempalace_delete_drawer", description = "Delete a drawer by ID")]
     async fn delete_drawer(&self, Parameters(p): Parameters<DeleteDrawerParams>) -> String {
         let db_path = self.db_path.clone();
         let id = p.id.clone();
@@ -456,7 +456,7 @@ impl MemPalace {
 
     // ── tool 15: kg_query ────────────────────────────────────────────────────
 
-    #[tool(description = "Query knowledge graph triples by entity name")]
+    #[tool(name = "mempalace_kg_query", description = "Query knowledge graph triples by entity name")]
     async fn kg_query(&self, Parameters(p): Parameters<KgQueryParams>) -> String {
         let kg_path = self.kg_path.clone();
         let entity = p.entity.clone();
@@ -475,7 +475,7 @@ impl MemPalace {
 
     // ── tool 16: kg_add ──────────────────────────────────────────────────────
 
-    #[tool(description = "Add a knowledge graph triple (subject, predicate, object)")]
+    #[tool(name = "mempalace_kg_add", description = "Add a knowledge graph triple (subject, predicate, object)")]
     async fn kg_add(&self, Parameters(p): Parameters<KgAddParams>) -> String {
         let kg_path = self.kg_path.clone();
         let subject = p.subject.clone();
@@ -503,7 +503,7 @@ impl MemPalace {
 
     // ── tool 17: kg_invalidate ───────────────────────────────────────────────
 
-    #[tool(description = "Invalidate (soft-delete) a knowledge graph triple")]
+    #[tool(name = "mempalace_kg_invalidate", description = "Invalidate (soft-delete) a knowledge graph triple")]
     async fn kg_invalidate(&self, Parameters(p): Parameters<KgInvalidateParams>) -> String {
         let kg_path = self.kg_path.clone();
         let subject = p.subject.clone();
@@ -522,7 +522,7 @@ impl MemPalace {
 
     // ── tool 18: kg_timeline ─────────────────────────────────────────────────
 
-    #[tool(description = "Get chronological timeline of triples for an entity")]
+    #[tool(name = "mempalace_kg_timeline", description = "Get chronological timeline of triples for an entity")]
     async fn kg_timeline(&self, Parameters(p): Parameters<KgTimelineParams>) -> String {
         let kg_path = self.kg_path.clone();
         let entity = p.entity.clone().unwrap_or_default();
@@ -546,7 +546,7 @@ impl MemPalace {
 
     // ── tool 19: kg_stats ────────────────────────────────────────────────────
 
-    #[tool(description = "Statistics about the knowledge graph")]
+    #[tool(name = "mempalace_kg_stats", description = "Statistics about the knowledge graph")]
     async fn kg_stats(&self) -> String {
         let kg_path = self.kg_path.clone();
         let result = tokio::task::spawn_blocking(move || -> anyhow::Result<_> {
@@ -562,7 +562,7 @@ impl MemPalace {
 
     // ── tool 20: diary_write ─────────────────────────────────────────────────
 
-    #[tool(description = "Write a diary entry for an agent")]
+    #[tool(name = "mempalace_diary_write", description = "Write a diary entry for an agent")]
     async fn diary_write(&self, Parameters(p): Parameters<DiaryWriteParams>) -> String {
         let vec = match self.embed(&p.entry).await {
             Ok(v) => v,
@@ -602,7 +602,7 @@ impl MemPalace {
 
     // ── tool 21: diary_read ──────────────────────────────────────────────────
 
-    #[tool(description = "Read diary entries for an agent")]
+    #[tool(name = "mempalace_diary_read", description = "Read diary entries for an agent")]
     async fn diary_read(&self, Parameters(p): Parameters<DiaryReadParams>) -> String {
         let db_path = self.db_path.clone();
         let wing = format!("diary_{}", p.agent_name);
@@ -621,7 +621,7 @@ impl MemPalace {
 
     // ── tool 22: get_aaak_spec ───────────────────────────────────────────────
 
-    #[tool(description = "Return the AAAK dialect specification used for memory compression")]
+    #[tool(name = "mempalace_get_aaak_spec", description = "Return the AAAK dialect specification used for memory compression")]
     async fn get_aaak_spec(&self) -> String {
         serde_json::json!({ "spec": AAAK_SPEC }).to_string()
     }
