@@ -63,10 +63,7 @@ fn parse_args(args: Vec<String>) -> anyhow::Result<CliOptions> {
     })
 }
 
-fn next_value(
-    args: &mut impl Iterator<Item = String>,
-    flag: &str,
-) -> anyhow::Result<String> {
+fn next_value(args: &mut impl Iterator<Item = String>, flag: &str) -> anyhow::Result<String> {
     args.next()
         .ok_or_else(|| anyhow::anyhow!("missing value for {flag}"))
 }

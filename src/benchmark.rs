@@ -144,10 +144,19 @@ impl LongMemEvalBenchmark {
         data_path: &Path,
         options: &LongMemEvalBenchmarkOptions,
     ) -> anyhow::Result<LongMemEvalBenchmarkRun> {
-        let file = File::open(data_path)
-            .with_context(|| format!("failed to open LongMemEval dataset at {}", data_path.display()))?;
-        let mut entries: Vec<LongMemEvalEntry> = serde_json::from_reader(file)
-            .with_context(|| format!("failed to parse LongMemEval dataset at {}", data_path.display()))?;
+        let file = File::open(data_path).with_context(|| {
+            format!(
+                "failed to open LongMemEval dataset at {}",
+                data_path.display()
+            )
+        })?;
+        let mut entries: Vec<LongMemEvalEntry> =
+            serde_json::from_reader(file).with_context(|| {
+                format!(
+                    "failed to parse LongMemEval dataset at {}",
+                    data_path.display()
+                )
+            })?;
 
         if let Some(max_questions) = options.max_questions {
             entries.truncate(max_questions);
@@ -186,8 +195,28 @@ impl LongMemEvalBenchmark {
         corpus_items: &[CorpusItem],
         db_path: &Path,
     ) -> anyhow::Result<LongMemEvalBenchmarkResult> {
-        let storage = VectorStorage::new(db_path)
-            .with_context(|| format!("failed to initialize benchmark DB at {}", db_path.display()))?;
+        if corpus_items.is_empty() {
+            return Ok(LongMemEvalBenchmarkResult {
+                question_id: entry.question_id.clone(),
+                question_type: entry.question_type.clone(),
+                question: entry.question.clone(),
+                answer: entry.answer.clone(),
+                question_date: entry.question_date.clone(),
+                answer_session_ids: entry.answer_session_ids.clone(),
+                retrieval_results: LongMemEvalRetrievalResult {
+                    query: entry.question.clone(),
+                    corpus_size: 0,
+                    ranked_items: Vec::new(),
+                    metrics: empty_metrics(granularity),
+                },
+                is_abstention: entry.question_id.contains("_abs"),
+                has_target_user_turn: has_target_user_turn(entry),
+            });
+        }
+
+        let storage = VectorStorage::new(db_path).with_context(|| {
+            format!("failed to initialize benchmark DB at {}", db_path.display())
+        })?;
 
         let texts: Vec<&str> = corpus_items.iter().map(|item| item.text.as_str()).collect();
         let embeddings = self
@@ -250,7 +279,8 @@ impl LongMemEvalBenchmark {
         let mut metrics = BTreeMap::new();
         let mut primary_metrics = BTreeMap::new();
         for cutoff in METRIC_CUTOFFS {
-            let (recall_any, recall_all, ndcg_any) = evaluate_retrieval(&ranked_ids, &correct_docs, cutoff);
+            let (recall_any, recall_all, ndcg_any) =
+                evaluate_retrieval(&ranked_ids, &correct_docs, cutoff);
             primary_metrics.insert(format!("recall_any@{cutoff}"), recall_any);
             primary_metrics.insert(format!("recall_all@{cutoff}"), recall_all);
             primary_metrics.insert(format!("ndcg_any@{cutoff}"), ndcg_any);
@@ -266,15 +296,18 @@ impl LongMemEvalBenchmark {
                 session_metrics.insert(format!("recall_all@{cutoff}"), recall_all);
                 session_metrics.insert(format!("ndcg_any@{cutoff}"), ndcg_any);
             }
-            metrics.insert(LongMemEvalGranularity::Session.as_str().to_string(), session_metrics);
+            metrics.insert(
+                LongMemEvalGranularity::Session.as_str().to_string(),
+                session_metrics,
+            );
         }
 
         let ranked_items = search_results
             .into_iter()
             .map(|result| {
-                let corpus_item = items_by_id
-                    .get(&result.drawer.id)
-                    .with_context(|| format!("missing benchmark metadata for {}", result.drawer.id))?;
+                let corpus_item = items_by_id.get(&result.drawer.id).with_context(|| {
+                    format!("missing benchmark metadata for {}", result.drawer.id)
+                })?;
                 Ok(LongMemEvalRankedItem {
                     corpus_id: result.drawer.id,
                     text: result.drawer.content,
@@ -362,9 +395,11 @@ fn build_corpus_items(
 }
 
 fn has_target_user_turn(entry: &LongMemEvalEntry) -> bool {
-    entry.haystack_sessions.iter().flatten().any(|turn| {
-        turn.role == "user" && turn.has_answer.unwrap_or(false)
-    })
+    entry
+        .haystack_sessions
+        .iter()
+        .flatten()
+        .any(|turn| turn.role == "user" && turn.has_answer.unwrap_or(false))
 }
 
 fn aggregate_results(
@@ -427,11 +462,10 @@ fn aggregate_results(
     }
 }
 
-fn evaluate_retrieval(
-    ranked_ids: &[String],
-    correct_docs: &[String],
-    k: usize,
-) -> (f64, f64, f64) {
+fn evaluate_retrieval(ranked_ids: &[String], correct_docs: &[String], k: usize) -> (f64, f64, f64) {
+    if correct_docs.is_empty() {
+        return (0.0, 0.0, 0.0);
+    }
     let recalled_docs: HashSet<&str> = ranked_ids.iter().take(k).map(String::as_str).collect();
     let recall_any = correct_docs
         .iter()
@@ -472,7 +506,13 @@ fn ndcg(ranked_ids: &[String], correct_docs: &[String], k: usize) -> f64 {
     let actual_relevances: Vec<f64> = ranked_ids
         .iter()
         .take(k)
-        .map(|doc| if correct_docs.contains(doc.as_str()) { 1.0 } else { 0.0 })
+        .map(|doc| {
+            if correct_docs.contains(doc.as_str()) {
+                1.0
+            } else {
+                0.0
+            }
+        })
         .collect();
     let ideal_hits = correct_docs.len().min(k);
     let ideal_relevances: Vec<f64> = (0..k)
@@ -529,13 +569,39 @@ fn create_temp_benchmark_dir() -> anyhow::Result<PathBuf> {
     Ok(path)
 }
 
+fn empty_metrics(granularity: LongMemEvalGranularity) -> BTreeMap<String, BTreeMap<String, f64>> {
+    let mut metrics = BTreeMap::new();
+    metrics.insert(granularity.as_str().to_string(), zero_metric_bucket());
+    if granularity == LongMemEvalGranularity::Turn {
+        metrics.insert(
+            LongMemEvalGranularity::Session.as_str().to_string(),
+            zero_metric_bucket(),
+        );
+    }
+    metrics
+}
+
+fn zero_metric_bucket() -> BTreeMap<String, f64> {
+    let mut bucket = BTreeMap::new();
+    for cutoff in METRIC_CUTOFFS {
+        bucket.insert(format!("recall_any@{cutoff}"), 0.0);
+        bucket.insert(format!("recall_all@{cutoff}"), 0.0);
+        bucket.insert(format!("ndcg_any@{cutoff}"), 0.0);
+    }
+    bucket
+}
+
 fn write_results_jsonl(path: &Path, results: &[LongMemEvalBenchmarkResult]) -> anyhow::Result<()> {
     let file = File::create(path)
         .with_context(|| format!("failed to create benchmark output {}", path.display()))?;
     let mut writer = BufWriter::new(file);
     for result in results {
-        serde_json::to_writer(&mut writer, result)
-            .with_context(|| format!("failed to serialize benchmark result for {}", result.question_id))?;
+        serde_json::to_writer(&mut writer, result).with_context(|| {
+            format!(
+                "failed to serialize benchmark result for {}",
+                result.question_id
+            )
+        })?;
         writer.write_all(b"\n")?;
     }
     writer.flush()?;
