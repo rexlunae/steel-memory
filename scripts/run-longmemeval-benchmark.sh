@@ -64,7 +64,6 @@ download_dataset() {
 
   if [[ -f "${destination}" && "${force_download}" != "true" ]]; then
     echo "Using existing dataset: ${destination}" >&2
-    printf '%s\n' "${destination}"
     return 0
   fi
 
@@ -76,7 +75,6 @@ download_dataset() {
     wget --quiet --output-document="${destination}" "${url}"
   fi
 
-  printf '%s\n' "${destination}"
 }
 
 run_benchmark() {
@@ -120,6 +118,7 @@ main() {
   local force_download="false"
   local downloader
   local current_dataset
+  local current_filename
   local dataset_path
   local -a datasets_to_run=()
 
@@ -202,7 +201,9 @@ main() {
   downloader="$(ensure_downloader)"
 
   for current_dataset in "${datasets_to_run[@]}"; do
-    dataset_path="$(download_dataset "${current_dataset}" "${data_dir}" "${force_download}" "${downloader}")"
+    current_filename="$(dataset_filename "${current_dataset}")"
+    dataset_path="${data_dir}/${current_filename}"
+    download_dataset "${current_dataset}" "${data_dir}" "${force_download}" "${downloader}"
     if [[ "${download_only}" != "true" ]]; then
       run_benchmark "${runner}" "${current_dataset}" "${dataset_path}" "${granularity}" "${max_questions}" "${results_dir}"
     fi
