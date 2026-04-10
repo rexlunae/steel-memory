@@ -93,11 +93,13 @@ You can benchmark steel-memory retrieval against [LongMemEval](https://github.co
 2. Run the benchmark:
 
 ```bash
-cargo run --bin longmemeval-benchmark -- \
+cargo bench --bench longmemeval -- \
   --data /absolute/path/to/longmemeval_oracle.json \
   --granularity session \
   --output /absolute/path/to/longmemeval-results.jsonl
 ```
+
+If you prefer, the same benchmark can also be run with `cargo run --bin longmemeval-benchmark -- ...`.
 
 Options:
 

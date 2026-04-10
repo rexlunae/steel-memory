@@ -131,6 +131,16 @@ pub struct LongMemEvalBenchmark {
     embedding: TextEmbedding,
 }
 
+pub fn run_cli(args: Vec<String>) -> anyhow::Result<()> {
+    let Some(options) = parse_cli_args(args)? else {
+        return Ok(());
+    };
+    let mut benchmark = LongMemEvalBenchmark::new()?;
+    let benchmark_run = benchmark.run_path(&options.data_path, &options.benchmark_options)?;
+    println!("{}", serde_json::to_string_pretty(&benchmark_run.summary)?);
+    Ok(())
+}
+
 impl LongMemEvalBenchmark {
     pub fn new() -> anyhow::Result<Self> {
         let embedding = TextEmbedding::try_new(InitOptions::new(EmbeddingModel::AllMiniLML6V2))
@@ -606,6 +616,61 @@ fn write_results_jsonl(path: &Path, results: &[LongMemEvalBenchmarkResult]) -> a
     }
     writer.flush()?;
     Ok(())
+}
+
+struct CliOptions {
+    data_path: PathBuf,
+    benchmark_options: LongMemEvalBenchmarkOptions,
+}
+
+fn parse_cli_args(args: Vec<String>) -> anyhow::Result<Option<CliOptions>> {
+    if args.is_empty() || args.iter().any(|arg| arg == "--help" || arg == "-h") {
+        print_usage();
+        return Ok(None);
+    }
+
+    let mut data_path = None;
+    let mut granularity = LongMemEvalGranularity::Session;
+    let mut max_questions = None;
+    let mut output_path = None;
+
+    let mut args = args.into_iter();
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--data" => data_path = Some(PathBuf::from(next_value(&mut args, "--data")?)),
+            "--granularity" => {
+                let value = next_value(&mut args, "--granularity")?;
+                granularity = value.parse()?;
+            }
+            "--max-questions" => {
+                let value = next_value(&mut args, "--max-questions")?;
+                max_questions = Some(value.parse()?);
+            }
+            "--output" => output_path = Some(PathBuf::from(next_value(&mut args, "--output")?)),
+            other => bail!("unknown argument: {other}"),
+        }
+    }
+
+    let data_path = data_path.ok_or_else(|| anyhow::anyhow!("--data is required"))?;
+    Ok(Some(CliOptions {
+        data_path,
+        benchmark_options: LongMemEvalBenchmarkOptions {
+            granularity,
+            max_questions,
+            output_path,
+        },
+    }))
+}
+
+fn next_value(args: &mut impl Iterator<Item = String>, flag: &str) -> anyhow::Result<String> {
+    args.next()
+        .ok_or_else(|| anyhow::anyhow!("missing value for {flag}"))
+}
+
+fn print_usage() {
+    eprintln!(
+        "Usage: longmemeval-benchmark --data <path> [--granularity session|turn] [--max-questions N] [--output <jsonl-path>]"
+    );
 }
 
 fn zip_three<'a, A, B, C>(
