@@ -647,6 +647,7 @@ fn parse_cli_args(args: Vec<String>) -> anyhow::Result<Option<CliOptions>> {
                 max_questions = Some(value.parse()?);
             }
             "--output" => output_path = Some(PathBuf::from(next_value(&mut args, "--output")?)),
+            "--bench" => { /* passed automatically by `cargo bench`; ignore */ }
             other => bail!("unknown argument: {other}"),
         }
     }
