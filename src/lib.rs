@@ -1,12 +1,13 @@
+pub mod benchmark;
 pub mod config;
-pub mod types;
+pub mod core;
 pub mod error;
 pub mod storage;
-pub mod core;
+pub mod types;
 
-pub use storage::vector::cosine_similarity;
-pub use storage::knowledge_graph::normalize_id;
 pub use core::dialect::compress_to_aaak;
+pub use storage::knowledge_graph::normalize_id;
+pub use storage::vector::cosine_similarity;
 pub use types::Drawer;
 
 use std::path::PathBuf;
