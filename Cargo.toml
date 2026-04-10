@@ -20,7 +20,7 @@ bench = false
 
 [[bench]]
 name = "longmemeval"
-path = "src/bin/longmemeval-benchmark.rs"
+path = "benches/longmemeval.rs"
 harness = false
 
 [dependencies]
