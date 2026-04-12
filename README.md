@@ -89,8 +89,23 @@ cargo test
 
 You can benchmark steel-memory retrieval against [LongMemEval](https://github.com/xiaowu0162/LongMemEval) with the included CLI.
 
-1. Download one of the LongMemEval JSON files, such as `longmemeval_oracle.json`, `longmemeval_s_cleaned.json`, or `longmemeval_m_cleaned.json`.
-2. Run the benchmark:
+The easiest way to download a dataset and run the benchmark is the helper script:
+
+```bash
+./scripts/run-longmemeval-benchmark.sh --dataset oracle
+```
+
+The script downloads the requested dataset into `.benchmarks/longmemeval/` and writes per-question results to `.benchmarks/longmemeval/results/`.
+
+Useful options:
+
+- `--dataset oracle|s|m|all` picks which LongMemEval file to download and run
+- `--granularity session|turn` controls whether the benchmark indexes whole sessions or user turns
+- `--max-questions N` limits the number of evaluation instances for a smaller test run
+- `--runner bench|bin` uses either `cargo bench` or `cargo run --release`
+- `--download-only` fetches datasets without starting the benchmark
+
+If you want to run the benchmark manually with an existing file, use:
 
 ```bash
 cargo bench --bench longmemeval -- \
