@@ -5,10 +5,11 @@ pub mod error;
 pub mod storage;
 pub mod types;
 
+// Re-exports for library users
 pub use core::dialect::compress_to_aaak;
 pub use storage::knowledge_graph::normalize_id;
-pub use storage::vector::cosine_similarity;
-pub use types::Drawer;
+pub use storage::vector::{cosine_similarity, VectorStorage};
+pub use types::{Drawer, SearchResult};
 
 use std::path::PathBuf;
 
