@@ -8,12 +8,28 @@ use std::{
 
 use anyhow::{Context, bail};
 use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use uuid::Uuid;
 
 use crate::{storage::vector::VectorStorage, types::Drawer};
 
 const METRIC_CUTOFFS: [usize; 6] = [1, 3, 5, 10, 30, 50];
+
+/// Deserialize answer field which can be string or number in LongMemEval dataset
+fn deserialize_answer<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    use serde::de::Error;
+    let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
+    match value {
+        serde_json::Value::String(s) => Ok(s),
+        serde_json::Value::Number(n) => Ok(n.to_string()),
+        serde_json::Value::Bool(b) => Ok(b.to_string()),
+        serde_json::Value::Null => Ok(String::new()),
+        _ => Err(D::Error::custom("expected string or number for answer")),
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -103,6 +119,7 @@ struct LongMemEvalEntry {
     question_id: String,
     question_type: String,
     question: String,
+    #[serde(deserialize_with = "deserialize_answer")]
     answer: String,
     question_date: String,
     haystack_session_ids: Vec<String>,
