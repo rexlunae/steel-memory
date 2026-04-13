@@ -2,6 +2,15 @@
 name = "steel-memory"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
+description = "A spatial memory palace for AI agents with semantic vector search, knowledge graphs, and MCP tools"
+readme = "README.md"
+repository = "https://github.com/rexlunae/steel-memory"
+homepage = "https://github.com/rexlunae/steel-memory"
+documentation = "https://docs.rs/steel-memory"
+keywords = ["ai", "agents", "memory", "mcp", "embeddings"]
+categories = ["database", "science", "text-processing"]
+authors = ["Erica Stith <rexlunae@gmail.com>"]
 
 [[bin]]
 name = "steel-memory"
