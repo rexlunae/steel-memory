@@ -11,6 +11,9 @@ pub use storage::knowledge_graph::normalize_id;
 pub use storage::vector::{cosine_similarity, VectorStorage};
 pub use types::{Drawer, SearchResult};
 
+// Re-export fastembed for embedding users
+pub use fastembed;
+
 use std::path::PathBuf;
 
 pub struct TestConfig {
