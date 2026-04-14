@@ -1,6 +1,6 @@
 [package]
 name = "steel-memory"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 license = "MIT"
 description = "A spatial memory palace for AI agents with semantic vector search, knowledge graphs, and MCP tools"

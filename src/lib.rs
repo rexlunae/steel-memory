@@ -7,9 +7,10 @@ pub mod types;
 
 // Re-exports for library users
 pub use core::dialect::compress_to_aaak;
-pub use storage::knowledge_graph::normalize_id;
+pub use storage::knowledge_graph::{normalize_id, KnowledgeGraph};
+pub use storage::palace_graph::{PalaceGraph, RoomNode};
 pub use storage::vector::{cosine_similarity, VectorStorage};
-pub use types::{Drawer, SearchResult};
+pub use types::{Drawer, Entity, SearchResult, Triple};
 
 // Re-export fastembed for embedding users
 pub use fastembed;
