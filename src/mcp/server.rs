@@ -128,6 +128,7 @@ struct DiaryReadParams {
 
 #[derive(Clone)]
 pub struct MemPalace {
+    #[allow(dead_code)]
     tool_router: ToolRouter<MemPalace>,
     db_path: PathBuf,
     kg_path: PathBuf,
